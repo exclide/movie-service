@@ -1,16 +1,22 @@
 package apiserver
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/go-chi/chi"
+	"github.com/sirupsen/logrus"
+	"net/http"
+)
 
 type ApiServer struct {
-	config *Config
+	config Config
 	logger *logrus.Logger
+	router chi.Router
 }
 
-func NewServer(config *Config) *ApiServer {
+func NewServer(config Config) *ApiServer {
 	return &ApiServer{
 		config: config,
 		logger: logrus.New(),
+		router: chi.NewRouter(),
 	}
 }
 
@@ -19,9 +25,11 @@ func (s *ApiServer) Start() error {
 		return err
 	}
 
+	s.configureRouter()
+
 	s.logger.Info("starting api server")
 
-	return nil
+	return http.ListenAndServe(s.config.Port, s.router)
 }
 
 func (s *ApiServer) configureLogger() error {
@@ -33,4 +41,12 @@ func (s *ApiServer) configureLogger() error {
 	s.logger.SetLevel(level)
 
 	return nil
+}
+
+func (s *ApiServer) Root(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("root."))
+}
+
+func (s *ApiServer) configureRouter() {
+	s.router.Get("/", s.Root)
 }
