@@ -1,6 +1,8 @@
 package apiserver
 
 import (
+	controller2 "github.com/exclide/movie-service/internal/app/directors/controller"
+	repository2 "github.com/exclide/movie-service/internal/app/directors/repository"
 	"github.com/exclide/movie-service/internal/app/movies/controller"
 	"github.com/exclide/movie-service/internal/app/movies/repository"
 	"github.com/exclide/movie-service/internal/app/store"
@@ -54,7 +56,7 @@ func (s *ApiServer) configureLogger() error {
 }
 
 func (s *ApiServer) Root(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("root."))
+	w.Write([]byte("hello world"))
 }
 
 func (s *ApiServer) configureRouter() {
@@ -71,19 +73,34 @@ func (s *ApiServer) configureRouter() {
 
 	s.router.Get("/", s.Root)
 
-	mr := repository.NewMovieRepository(s.store)
-	h := controller.NewHandler(&mr)
+	movieRepo := repository.NewMovieRepository(s.store)
+	movieHandler := controller.NewMovieHandler(&movieRepo)
+	dirRepo := repository2.NewDirectorRepository(s.store)
+	dirHandler := controller2.NewDirectorHandler(&dirRepo)
 
 	s.router.Route("/api/v1/movies", func(r chi.Router) {
-		r.Get("/", h.GetMovies)
+		r.Get("/", movieHandler.GetMovies)
 
-		r.Post("/", h.CreateMovie)
+		r.Post("/", movieHandler.CreateMovie)
 
 		r.Route("/{movieID}", func(r chi.Router) {
-			r.Use(h.MovieCtx)
-			r.Get("/", h.GetMovie)
-			//r.Put("/", h.UpdateMovie)
-			r.Delete("/", h.DeleteMovie)
+			r.Use(movieHandler.MovieCtx)
+			r.Get("/", movieHandler.GetMovie)
+			//r.Put("/", movieHandler.UpdateMovie)
+			r.Delete("/", movieHandler.DeleteMovie)
+		})
+	})
+
+	s.router.Route("/api/v1/directors", func(r chi.Router) {
+		r.Get("/", dirHandler.GetDirectors)
+
+		r.Post("/", dirHandler.CreateDirector)
+
+		r.Route("/{movieID}", func(r chi.Router) {
+			r.Use(dirHandler.DirectorCtx)
+			r.Get("/", dirHandler.GetDirector)
+			//r.Put("/", dirHandler.UpdateMovie)
+			r.Delete("/", dirHandler.DeleteDirector)
 		})
 	})
 }
