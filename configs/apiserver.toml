@@ -1,2 +1,5 @@
 port = ":8080"
 log_level = "debug"
+
+[store]
+database_url = "postgres://localhost:5433/movieserv?sslmode=disable&user=postgres&password=123"
