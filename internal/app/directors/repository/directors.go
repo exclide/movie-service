@@ -36,7 +36,7 @@ func (r *DirectorRepository) GetById(ctx context.Context, id int) (*model.Direct
 		return nil, err
 	}
 
-	err = stmt.QueryRow(id).Scan(&mv.Name)
+	err = stmt.QueryRow(id).Scan(&mv.Id, &mv.Name)
 	if err != nil {
 		return nil, err
 	}

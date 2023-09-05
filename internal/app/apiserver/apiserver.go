@@ -96,7 +96,7 @@ func (s *ApiServer) configureRouter() {
 
 		r.Post("/", dirHandler.CreateDirector)
 
-		r.Route("/{movieID}", func(r chi.Router) {
+		r.Route("/{dirID}", func(r chi.Router) {
 			r.Use(dirHandler.DirectorCtx)
 			r.Get("/", dirHandler.GetDirector)
 			//r.Put("/", dirHandler.UpdateMovie)
