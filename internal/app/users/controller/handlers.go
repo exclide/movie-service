@@ -131,7 +131,7 @@ func GenerateJWT(u model.User) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": u.Login,
-		"exp": time.Now().Add(30 * time.Minute),
+		"exp": time.Now().Unix() + 30*60,
 	})
 
 	tokenStr, err := token.SignedString(key)

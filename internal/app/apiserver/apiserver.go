@@ -1,6 +1,7 @@
 package apiserver
 
 import (
+	"fmt"
 	controller2 "github.com/exclide/movie-service/internal/app/directors/controller"
 	repository2 "github.com/exclide/movie-service/internal/app/directors/repository"
 	"github.com/exclide/movie-service/internal/app/movies/controller"
@@ -8,8 +9,10 @@ import (
 	"github.com/exclide/movie-service/internal/app/store"
 	controller3 "github.com/exclide/movie-service/internal/app/users/controller"
 	repository3 "github.com/exclide/movie-service/internal/app/users/repository"
+	"github.com/exclide/movie-service/internal/app/utils"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"time"
@@ -70,30 +73,36 @@ func contentType(next http.Handler) http.Handler {
 
 func authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		/*
-			tokenString := r.Header["Token"]
-			if tokenString == nil {
-				utils.Respond(w, r, http.StatusUnauthorized, "no token provided")
+		tokenString := r.Header["Token"]
+		if tokenString == nil {
+			utils.Respond(w, r, http.StatusUnauthorized, "no token provided")
+			return
+		}
+
+		token, err := jwt.Parse(tokenString[0], func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
 
-			token, err := jwt.Parse(tokenString[0], func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-				}
+			key := []byte("SecretKey")
 
-				return "", nil
-			})
-			if err != nil {
-				utils.Error(w, r, http.StatusUnauthorized, err)
-			}
+			return key, nil
+		})
 
-			if !token.Valid {
-				utils.Respond(w, r, http.StatusUnauthorized, "invalid token")
-			}
+		if err != nil {
+			utils.Error(w, r, http.StatusUnauthorized, err)
+			return
+		}
 
-			claims := token.Claims.(jwt.MapClaims)
+		if !token.Valid {
+			utils.Respond(w, r, http.StatusUnauthorized, "invalid token")
+			return
+		}
 
-			fmt.Println(claims["sub"])*/
+		claims := token.Claims.(jwt.MapClaims)
+
+		fmt.Println(claims["sub"])
+		fmt.Println(claims["exp"])
 
 		next.ServeHTTP(w, r)
 	})
