@@ -6,6 +6,8 @@ import (
 	"github.com/exclide/movie-service/internal/app/movies/controller"
 	"github.com/exclide/movie-service/internal/app/movies/repository"
 	"github.com/exclide/movie-service/internal/app/store"
+	controller3 "github.com/exclide/movie-service/internal/app/users/controller"
+	repository3 "github.com/exclide/movie-service/internal/app/users/repository"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/sirupsen/logrus"
@@ -77,6 +79,8 @@ func (s *ApiServer) configureRouter() {
 	movieHandler := controller.NewMovieHandler(&movieRepo)
 	dirRepo := repository2.NewDirectorRepository(s.store)
 	dirHandler := controller2.NewDirectorHandler(&dirRepo)
+	userRepo := repository3.NewUserRepository(s.store)
+	userHandler := controller3.NewUserHandler(&userRepo)
 
 	s.router.Route("/api/v1/movies", func(r chi.Router) {
 		r.Get("/", movieHandler.GetMovies)
@@ -101,6 +105,19 @@ func (s *ApiServer) configureRouter() {
 			r.Get("/", dirHandler.GetDirector)
 			//r.Put("/", dirHandler.UpdateMovie)
 			r.Delete("/", dirHandler.DeleteDirector)
+		})
+	})
+
+	s.router.Route("/api/v1/users", func(r chi.Router) {
+		r.Get("/", userHandler.GetUsers)
+
+		r.Post("/", userHandler.CreateUser)
+
+		r.Route("/{dirID}", func(r chi.Router) {
+			r.Use(userHandler.UserCtx)
+			r.Get("/", userHandler.GetUser)
+			//r.Put("/", userHandler.UpdateMovie)
+			r.Delete("/", userHandler.DeleteUser)
 		})
 	})
 }
