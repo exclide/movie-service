@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"github.com/exclide/movie-service/internal/app/model"
 	"github.com/exclide/movie-service/internal/app/users"
+	"github.com/exclide/movie-service/internal/app/utils"
 	"github.com/go-chi/chi"
-	"log"
+	"github.com/golang-jwt/jwt"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"time"
 )
 
 type UserHandler struct {
@@ -23,7 +26,8 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewEncoder(w).Encode(mv)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
 	}
 }
 
@@ -31,13 +35,15 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	mv, err := h.repository.GetAll(r.Context())
 
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
 	}
 
 	err = json.NewEncoder(w).Encode(mv)
 
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
 	}
 }
 
@@ -46,18 +52,27 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&mv)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.Error(w, r, http.StatusBadRequest, err)
 		return
 	}
 
+	b, err := bcrypt.GenerateFromPassword([]byte(mv.Password), bcrypt.MinCost)
+	if err != nil {
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
+	}
+	mv.Password = string(b)
+
 	create, err := h.repository.Create(r.Context(), &mv)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
 	}
 
 	err = json.NewEncoder(w).Encode(create)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
 	}
 }
 
@@ -66,10 +81,36 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.repository.DeleteByLogin(r.Context(), mv.Login)
 	if err != nil {
-		log.Fatal(err)
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
 	}
 
 	json.NewEncoder(w).Encode("Delete ok")
+}
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	var mv model.User
+
+	err := json.NewDecoder(r.Body).Decode(&mv)
+	if err != nil {
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	user, err := h.repository.GetByLogin(r.Context(), mv.Login)
+
+	if err != nil || bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(mv.Password)) != nil {
+		utils.Error(w, r, http.StatusBadRequest, err)
+		return
+	}
+
+	jwtToken, err := GenerateJWT(mv)
+	if err != nil {
+		utils.Error(w, r, http.StatusUnauthorized, err)
+		return
+	}
+
+	utils.Respond(w, r, http.StatusOK, jwtToken)
 }
 
 func (h *UserHandler) UserCtx(next http.Handler) http.Handler {
@@ -81,7 +122,22 @@ func (h *UserHandler) UserCtx(next http.Handler) http.Handler {
 			return
 		}
 		ctx := context.WithValue(r.Context(), "user", user)
-		//w.Header().Add("Content-Type", "application/json")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func GenerateJWT(u model.User) (string, error) {
+	key := []byte("SecretKey")
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": u.Login,
+		"exp": time.Now().Add(30 * time.Minute),
+	})
+
+	tokenStr, err := token.SignedString(key)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenStr, nil
 }

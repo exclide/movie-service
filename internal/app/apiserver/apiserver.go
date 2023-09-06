@@ -61,6 +61,44 @@ func (s *ApiServer) Root(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("hello world"))
 }
 
+func contentType(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func authorize(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		/*
+			tokenString := r.Header["Token"]
+			if tokenString == nil {
+				utils.Respond(w, r, http.StatusUnauthorized, "no token provided")
+			}
+
+			token, err := jwt.Parse(tokenString[0], func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				}
+
+				return "", nil
+			})
+			if err != nil {
+				utils.Error(w, r, http.StatusUnauthorized, err)
+			}
+
+			if !token.Valid {
+				utils.Respond(w, r, http.StatusUnauthorized, "invalid token")
+			}
+
+			claims := token.Claims.(jwt.MapClaims)
+
+			fmt.Println(claims["sub"])*/
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (s *ApiServer) configureRouter() {
 	// A good base middleware stack
 	s.router.Use(middleware.RequestID)
@@ -72,7 +110,7 @@ func (s *ApiServer) configureRouter() {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	s.router.Use(middleware.Timeout(60 * time.Second))
-
+	s.router.Use(contentType)
 	s.router.Get("/", s.Root)
 
 	movieRepo := repository.NewMovieRepository(s.store)
@@ -111,15 +149,17 @@ func (s *ApiServer) configureRouter() {
 	s.router.Route("/api/v1/users", func(r chi.Router) {
 		r.Get("/", userHandler.GetUsers)
 
-		r.Post("/", userHandler.CreateUser)
+		r.With(authorize).Post("/", userHandler.CreateUser)
 
-		r.Route("/{dirID}", func(r chi.Router) {
+		r.Route("/{userID}", func(r chi.Router) {
 			r.Use(userHandler.UserCtx)
 			r.Get("/", userHandler.GetUser)
 			//r.Put("/", userHandler.UpdateMovie)
 			r.Delete("/", userHandler.DeleteUser)
 		})
 	})
+
+	s.router.Post("/api/v1/login", userHandler.Login)
 }
 
 func (s *ApiServer) configureStore() error {
