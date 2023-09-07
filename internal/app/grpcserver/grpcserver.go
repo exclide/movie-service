@@ -11,9 +11,11 @@ type GrpcServer struct {
 
 func (s *GrpcServer) Reverse(ctx context.Context, in *pb.StringRequest) (*pb.ReverseResponse, error) {
 	runes := []rune(in.Str)
-	l, r := 0, len(runes)
+	l, r := 0, len(runes)-1
 	for l < r {
 		runes[l], runes[r] = runes[r], runes[l]
+		l++
+		r--
 	}
 
 	return &pb.ReverseResponse{Str: string(runes)}, nil
