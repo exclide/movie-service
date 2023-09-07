@@ -72,14 +72,18 @@ func contentType(next http.Handler) http.Handler {
 }
 
 func authorize(next http.Handler) http.Handler {
+	const BearerSchema = "Bearer "
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header["Token"]
-		if tokenString == nil {
-			utils.Respond(w, r, http.StatusUnauthorized, "no token provided")
+		tokenString := r.Header.Get("Authorization")
+		if len(tokenString) <= len(BearerSchema) {
+			utils.Respond(w, r, http.StatusUnauthorized, "invalid token provided")
 			return
 		}
 
-		token, err := jwt.Parse(tokenString[0], func(token *jwt.Token) (interface{}, error) {
+		//splitToken := strings.Split(tokenString, "Bearer ")
+
+		token, err := jwt.Parse(tokenString[7:], func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 			}
