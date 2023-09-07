@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "../../pkg/pb";
+
+service Reverser {
+  rpc Reverse(StringRequest) returns (ReverseResponse) {}
+  rpc Counter(StringRequest) returns (CountResponse) {}
+}
+
+message StringRequest {
+  string str = 1;
+}
+
+message ReverseResponse {
+  string str = 1;
+}
+
+message CountResponse {
+  int32 cnt = 1;
+}
