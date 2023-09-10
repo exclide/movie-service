@@ -2,14 +2,11 @@ package apiserver
 
 import (
 	"fmt"
-	controller2 "github.com/exclide/movie-service/internal/app/directors/controller"
-	repository2 "github.com/exclide/movie-service/internal/app/directors/repository"
-	"github.com/exclide/movie-service/internal/app/movies/controller"
-	"github.com/exclide/movie-service/internal/app/movies/repository"
+	"github.com/exclide/movie-service/internal/app/directors"
+	"github.com/exclide/movie-service/internal/app/movies"
 	"github.com/exclide/movie-service/internal/app/store"
-	controller3 "github.com/exclide/movie-service/internal/app/users/controller"
-	repository3 "github.com/exclide/movie-service/internal/app/users/repository"
-	"github.com/exclide/movie-service/internal/app/utils"
+	"github.com/exclide/movie-service/internal/app/users"
+	"github.com/exclide/movie-service/pkg/httpformat"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/golang-jwt/jwt"
@@ -77,7 +74,7 @@ func authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 		if len(tokenString) <= len(BearerSchema) {
-			utils.Respond(w, r, http.StatusUnauthorized, "invalid token provided")
+			httpformat.Respond(w, r, http.StatusUnauthorized, "invalid token provided")
 			return
 		}
 
@@ -94,12 +91,12 @@ func authorize(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			utils.Error(w, r, http.StatusUnauthorized, err)
+			httpformat.Error(w, r, http.StatusUnauthorized, err)
 			return
 		}
 
 		if !token.Valid {
-			utils.Respond(w, r, http.StatusUnauthorized, "invalid token")
+			httpformat.Respond(w, r, http.StatusUnauthorized, "invalid token")
 			return
 		}
 
@@ -126,12 +123,17 @@ func (s *ApiServer) configureRouter() {
 	s.router.Use(contentType)
 	s.router.Get("/", s.Root)
 
-	movieRepo := repository.NewMovieRepository(s.store)
-	movieHandler := controller.NewMovieHandler(&movieRepo)
-	dirRepo := repository2.NewDirectorRepository(s.store)
-	dirHandler := controller2.NewDirectorHandler(&dirRepo)
-	userRepo := repository3.NewUserRepository(s.store)
-	userHandler := controller3.NewUserHandler(&userRepo)
+	movieRepo := movies.NewRepository(s.store)
+	movieServ := movies.NewService(movieRepo)
+	movieHandler := movies.NewHandler(movieServ)
+
+	dirRepo := directors.NewRepository(s.store)
+	dirServ := directors.NewService(dirRepo)
+	dirHandler := directors.NewDirectorHandler(dirServ)
+
+	userRepo := users.NewRepository(s.store)
+	userServ := users.NewService(userRepo)
+	userHandler := users.NewUserHandler(userServ)
 
 	s.router.Route("/api/v1/movies", func(r chi.Router) {
 		r.Get("/", movieHandler.GetMovies)

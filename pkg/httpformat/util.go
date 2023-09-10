@@ -1,4 +1,4 @@
-package utils
+package httpformat
 
 import (
 	"encoding/json"
