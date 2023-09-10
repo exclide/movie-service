@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/BurntSushi/toml"
-	"github.com/exclide/movie-service/api/proto"
+	"github.com/exclide/movie-service/api/proto/stringer"
 	"github.com/exclide/movie-service/internal/app/apiserver"
 	"github.com/exclide/movie-service/internal/app/grpcserver"
 	"google.golang.org/grpc"
@@ -39,7 +39,7 @@ func main() {
 
 	s := grpc.NewServer()
 	reflection.Register(s)
-	proto.RegisterReverserServer(s, grpcServ)
+	stringer.RegisterReverserServer(s, grpcServ)
 
 	go func() {
 		if err = s.Serve(lis); err != nil {
