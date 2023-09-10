@@ -4,7 +4,7 @@
 // - protoc             v4.24.2
 // source: api/proto/stringer.proto
 
-package pb
+package proto
 
 import (
 	context "context"

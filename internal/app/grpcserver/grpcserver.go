@@ -2,14 +2,14 @@ package grpcserver
 
 import (
 	"context"
-	"github.com/exclide/movie-service/pkg/pb"
+	"github.com/exclide/movie-service/api/proto"
 )
 
 type GrpcServer struct {
-	pb.UnimplementedReverserServer
+	proto.UnimplementedReverserServer
 }
 
-func (s *GrpcServer) Reverse(ctx context.Context, in *pb.StringRequest) (*pb.ReverseResponse, error) {
+func (s *GrpcServer) Reverse(ctx context.Context, in *proto.StringRequest) (*proto.ReverseResponse, error) {
 	runes := []rune(in.Str)
 	l, r := 0, len(runes)-1
 	for l < r {
@@ -18,10 +18,10 @@ func (s *GrpcServer) Reverse(ctx context.Context, in *pb.StringRequest) (*pb.Rev
 		r--
 	}
 
-	return &pb.ReverseResponse{Str: string(runes)}, nil
+	return &proto.ReverseResponse{Str: string(runes)}, nil
 }
 
-func (s *GrpcServer) Counter(ctx context.Context, in *pb.StringRequest) (*pb.CountResponse, error) {
+func (s *GrpcServer) Counter(ctx context.Context, in *proto.StringRequest) (*proto.CountResponse, error) {
 	resp := int32(len(in.Str))
-	return &pb.CountResponse{Cnt: resp}, nil
+	return &proto.CountResponse{Cnt: resp}, nil
 }

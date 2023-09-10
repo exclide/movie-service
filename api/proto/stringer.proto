@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package proto;
 
-option go_package = "../../pkg/pb";
+option go_package = "api/proto";
 
 service Reverser {
   rpc Reverse(StringRequest) returns (ReverseResponse) {}

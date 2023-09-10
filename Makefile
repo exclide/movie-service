@@ -14,4 +14,4 @@ test:
 
 .PHONY: protogen
 protogen:
-	protoc --go_out=pkg/pb --go-grpc_out=pkg/pb api/proto/stringer.proto
+	protoc --go_out=. --go-grpc_out=. api/proto/stringer.proto
