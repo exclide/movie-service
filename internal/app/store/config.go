@@ -6,6 +6,6 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		DatabaseURL: "postgres://localhost:5433/movieserv?sslmode=disable&user=postgres&password=123",
+		DatabaseURL: "postgres://localhost:5436/movieserv?sslmode=disable&user=postgres&password=123",
 	}
 }

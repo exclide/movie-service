@@ -1,0 +1,35 @@
+services:
+  goapp:
+    build: .
+    ports:
+      - "80:8080"
+      - "1234:1234"
+    volumes:
+      - .:/app
+    depends_on:
+      - migrate
+
+
+  postgresdb:
+    image: postgres
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - database_postgres:/var/lib/postgresql/data
+    command: -p 5436
+    ports:
+      - "5436:5436"
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    command: -path /migrations -database $MIGRATE_DB up
+    depends_on:
+      - postgresdb
+    restart: on-failure
+
+volumes:
+  database_postgres:
