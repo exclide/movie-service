@@ -58,7 +58,10 @@ func (s *ApiServer) configureLogger() error {
 }
 
 func (s *ApiServer) Root(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("hello world!"))
+	_, err := w.Write([]byte("hello world!"))
+	if err != nil {
+		return
+	}
 }
 
 func contentType(next http.Handler) http.Handler {

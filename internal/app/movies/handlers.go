@@ -6,6 +6,7 @@ import (
 	"github.com/exclide/movie-service/internal/app/model"
 	"github.com/exclide/movie-service/pkg/httpformat"
 	"github.com/go-chi/chi"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 )
@@ -75,7 +76,10 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode("Delete ok")
+	err = json.NewEncoder(w).Encode("Delete ok")
+	if err != nil {
+		logrus.Warn(err)
+	}
 }
 
 func (h *MovieHandler) MovieCtx(next http.Handler) http.Handler {

@@ -7,6 +7,7 @@ import (
 	"github.com/exclide/movie-service/pkg/httpformat"
 	"github.com/go-chi/chi"
 	"github.com/golang-jwt/jwt"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
@@ -84,7 +85,10 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode("Delete ok")
+	err = json.NewEncoder(w).Encode("Delete ok")
+	if err != nil {
+		logrus.Warn(err)
+	}
 }
 
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {

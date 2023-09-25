@@ -2,8 +2,10 @@ package movies
 
 import (
 	"context"
+	"database/sql"
 	"github.com/exclide/movie-service/internal/app/model"
 	"github.com/exclide/movie-service/internal/app/store"
+	"github.com/sirupsen/logrus"
 )
 
 type Repository interface {
@@ -74,7 +76,16 @@ func (r *repository) GetAll(ctx context.Context) ([]model.Movie, error) {
 	}
 
 	rows, err := stmt.Query()
-	defer rows.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			logrus.Info(err)
+		}
+	}(rows)
 
 	for rows.Next() {
 		var mv model.Movie
