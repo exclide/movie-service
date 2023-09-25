@@ -138,44 +138,9 @@ func (s *ApiServer) configureRouter() {
 	userServ := users.NewService(userRepo)
 	userHandler := users.NewUserHandler(userServ)
 
-	s.router.Route("/api/v1/movies", func(r chi.Router) {
-		r.Get("/", movieHandler.GetMovies)
-
-		r.Post("/", movieHandler.CreateMovie)
-
-		r.Route("/{movieID}", func(r chi.Router) {
-			r.Use(movieHandler.MovieCtx)
-			r.Get("/", movieHandler.GetMovie)
-			//r.Put("/", movieHandler.UpdateMovie)
-			r.Delete("/", movieHandler.DeleteMovie)
-		})
-	})
-
-	s.router.Route("/api/v1/directors", func(r chi.Router) {
-		r.Get("/", dirHandler.GetDirectors)
-
-		r.Post("/", dirHandler.CreateDirector)
-
-		r.Route("/{dirID}", func(r chi.Router) {
-			r.Use(dirHandler.DirectorCtx)
-			r.Get("/", dirHandler.GetDirector)
-			//r.Put("/", dirHandler.UpdateMovie)
-			r.Delete("/", dirHandler.DeleteDirector)
-		})
-	})
-
-	s.router.Route("/api/v1/users", func(r chi.Router) {
-		r.Get("/", userHandler.GetUsers)
-
-		r.With(authorize).Post("/", userHandler.CreateUser)
-
-		r.Route("/{userID}", func(r chi.Router) {
-			r.Use(userHandler.UserCtx)
-			r.Get("/", userHandler.GetUser)
-			//r.Put("/", userHandler.UpdateMovie)
-			r.Delete("/", userHandler.DeleteUser)
-		})
-	})
+	directors.Route(s.router, dirHandler)
+	movies.Route(s.router, movieHandler)
+	users.Route(s.router, userHandler, authorize)
 
 	s.router.Post("/api/v1/login", userHandler.Login)
 }

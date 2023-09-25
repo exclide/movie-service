@@ -20,7 +20,7 @@ func NewHandler(r Service) *MovieHandler {
 }
 
 func (h *MovieHandler) GetMovie(w http.ResponseWriter, r *http.Request) {
-	mv := r.Context().Value("movie").(*model.Movie)
+	mv := r.Context().Value(key).(*model.Movie)
 
 	err := json.NewEncoder(w).Encode(mv)
 	if err != nil {
@@ -68,7 +68,7 @@ func (h *MovieHandler) CreateMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
-	mv := r.Context().Value("movie").(*model.Movie)
+	mv := r.Context().Value(key).(*model.Movie)
 
 	err := h.serv.DeleteById(r.Context(), mv.Id)
 	if err != nil {
@@ -82,6 +82,10 @@ func (h *MovieHandler) DeleteMovie(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type contextKey string
+
+const key contextKey = "movie"
+
 func (h *MovieHandler) MovieCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		movieID, _ := strconv.Atoi(chi.URLParam(r, "movieID"))
@@ -90,7 +94,7 @@ func (h *MovieHandler) MovieCtx(next http.Handler) http.Handler {
 			httpformat.Error(w, r, http.StatusBadRequest, err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "movie", movie)
+		ctx := context.WithValue(r.Context(), key, movie)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

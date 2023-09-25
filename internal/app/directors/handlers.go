@@ -20,7 +20,7 @@ func NewDirectorHandler(r Service) *DirectorHandler {
 }
 
 func (h *DirectorHandler) GetDirector(w http.ResponseWriter, r *http.Request) {
-	mv := r.Context().Value("dir").(*model.Director)
+	mv := r.Context().Value(key).(*model.Director)
 
 	err := json.NewEncoder(w).Encode(mv)
 	if err != nil {
@@ -68,7 +68,7 @@ func (h *DirectorHandler) CreateDirector(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *DirectorHandler) DeleteDirector(w http.ResponseWriter, r *http.Request) {
-	mv := r.Context().Value("dir").(*model.Director)
+	mv := r.Context().Value(key).(*model.Director)
 
 	err := h.serv.DeleteById(r.Context(), mv.Id)
 	if err != nil {
@@ -82,6 +82,10 @@ func (h *DirectorHandler) DeleteDirector(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+type contextKey string
+
+const key contextKey = "dir"
+
 func (h *DirectorHandler) DirectorCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dirID, _ := strconv.Atoi(chi.URLParam(r, "dirID"))
@@ -90,7 +94,7 @@ func (h *DirectorHandler) DirectorCtx(next http.Handler) http.Handler {
 			httpformat.Error(w, r, http.StatusBadRequest, err)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "dir", dir)
+		ctx := context.WithValue(r.Context(), key, dir)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

@@ -12,5 +12,5 @@ func TestApiServer_HandleRoot(t *testing.T) {
 	rec := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	serv.Root(rec, req)
-	assert.Equal(t, "hello world", rec.Body.String())
+	assert.Equal(t, "hello world!", rec.Body.String())
 }

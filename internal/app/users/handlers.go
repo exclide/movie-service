@@ -22,7 +22,7 @@ func NewUserHandler(serv Service) *UserHandler {
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	mv := r.Context().Value("user").(*model.User)
+	mv := r.Context().Value(key).(*model.User)
 
 	err := json.NewEncoder(w).Encode(mv)
 	if err != nil {
@@ -77,7 +77,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	mv := r.Context().Value("user").(*model.User)
+	mv := r.Context().Value(key).(*model.User)
 
 	err := h.serv.DeleteByLogin(r.Context(), mv.Login)
 	if err != nil {
@@ -116,6 +116,10 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	httpformat.Respond(w, r, http.StatusOK, jwtToken)
 }
 
+type contextKey string
+
+const key contextKey = "movie"
+
 func (h *UserHandler) UserCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := chi.URLParam(r, "userID")
@@ -124,7 +128,7 @@ func (h *UserHandler) UserCtx(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(404), 404)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "user", user)
+		ctx := context.WithValue(r.Context(), key, user)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
