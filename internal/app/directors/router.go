@@ -1,9 +1,16 @@
 package directors
 
-import "github.com/go-chi/chi"
+import (
+	"fmt"
+	"github.com/go-chi/chi"
+)
+
+const routeName = "directors"
 
 func Route(r chi.Router, h *DirectorHandler) {
-	r.Route("/api/v1/directors", func(r chi.Router) {
+	str := fmt.Sprintf("/api/v1/%s", routeName)
+
+	r.Route(str, func(r chi.Router) {
 		r.Get("/", h.GetDirectors)
 
 		r.Post("/", h.CreateDirector)
